@@ -10,7 +10,7 @@ import (
 )
 
 var currWoker = &sf.SnowFlake{}
-var totalNum = 10000000
+var totalNum = 100000
 
 func main() {
 	testSnowflake()
@@ -48,8 +48,8 @@ func testMine()  {
 		}
 		dMap[x]= true
 	}
-	fmt.Println("重复数",repeatCount,len(dMap))
-	fmt.Println("耗时",time.Now().UnixNano()/1000/1000-now,"毫秒")
+	fmt.Println("MINE:重复数",repeatCount,len(dMap))
+	fmt.Println("MINE:耗时",time.Now().UnixNano()/1000/1000-now,"毫秒")
 }
 
 func testSnowflake()  {
@@ -80,8 +80,8 @@ func testSnowflake()  {
 		}
 		dMap[x]= true
 	}
-	fmt.Println("重复数",repeatCount,len(dMap))
-	fmt.Println("耗时",time.Now().UnixNano()/1000/1000-now,"毫秒")
+	fmt.Println("Other:重复数",repeatCount,len(dMap))
+	fmt.Println("Other:耗时",time.Now().UnixNano()/1000/1000-now,"毫秒")
 
 	// Generate a snowflake ID.
 	//id := node.Generate()

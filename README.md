@@ -2,5 +2,3 @@
 ```
 go build -race
 ```
-
-参考：
