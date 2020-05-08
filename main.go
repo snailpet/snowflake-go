@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -31,7 +32,9 @@ func main() {
 	repeatCount := 0
 	for i:=0;i<totalNum;i++{
 		x := <-ch
-		//fmt.Println(x)
+		if len(strconv.FormatInt(x, 10)) != 19 {
+			fmt.Println("长度变成了18位",x)
+		}
 		if dMap[x] {
 			fmt.Println(x,"重复了")
 			repeatCount++
