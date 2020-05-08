@@ -11,6 +11,7 @@ import (
 
 func main() {
 	totalNum := 1000000
+	now :=time.Now().UnixNano()/1000/1000
 	currWoker := &SnowFlake{}
 	err := currWoker.InitSnowFlake(1023, 1023)
 	if err != nil {
@@ -42,6 +43,7 @@ func main() {
 		dMap[x]= true
 	}
 	fmt.Println("重复数",repeatCount,len(dMap))
+	fmt.Println("耗时",now-time.Now().UnixNano()/1000/1000)
 }
 
 type SnowFlake struct {
