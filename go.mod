@@ -1,3 +1,3 @@
-module snow-flake
+module snowflake-go
 
 go 1.14
