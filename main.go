@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	totalNum := 10000000
+	totalNum := 1000000
 	currWoker := &IdWorker{}
 	err := currWoker.InitIdWorker(1023, 1023)
 	if err != nil {
@@ -41,7 +41,7 @@ func main() {
 		}
 		dMap[x]= true
 	}
-	fmt.Println("重复数",repeatCount)
+	fmt.Println("重复数",repeatCount,len(dMap))
 }
 
 type IdWorker struct {
@@ -59,7 +59,6 @@ type IdWorker struct {
 	dataCenterId          int64
 	sequence              int64
 	lastTimestamp         int64
-	signMask              int64
 	idLock                *sync.Mutex
 }
 
@@ -71,17 +70,17 @@ func (this *IdWorker) InitIdWorker(workerId, dataCenterId int64) error {
 	this.startTime = 1688927006000
 	this.workerIdBits = 5
 	this.dataCenterIdBits = 5
+	// 这个是二进制运算，就是5 bit最多只能有31个数字，也就是说机器id最多只能是32以内
 	this.maxWorkerId = baseValue ^ (baseValue << this.workerIdBits)
+	// 这个是一个意思，就是5 bit最多只能有31个数字，机房id最多只能是32以内
 	this.maxDataCenterId = baseValue ^ (baseValue << this.dataCenterIdBits)
 	this.sequenceBits = 12
-	this.workerIdLeftShift = this.sequenceBits
-	this.dataCenterIdLeftShift = this.workerIdBits + this.workerIdLeftShift
-	this.timestampLeftShift = this.dataCenterIdBits + this.dataCenterIdLeftShift
+	this.workerIdLeftShift = this.sequenceBits //12
+	this.dataCenterIdLeftShift = this.workerIdBits + this.workerIdLeftShift//17
+	this.timestampLeftShift = this.dataCenterIdBits + this.dataCenterIdLeftShift//22
 	this.sequenceMask = baseValue ^ (baseValue << this.sequenceBits)
 	this.sequence = 0
 	this.lastTimestamp = -1
-	this.signMask = ^baseValue + 1
-
 	this.idLock = &sync.Mutex{}
 
 	if this.workerId < 0 || this.workerId > this.maxWorkerId {
@@ -98,20 +97,22 @@ func (this *IdWorker) InitIdWorker(workerId, dataCenterId int64) error {
 func (this *IdWorker) NextId() (int64, error) {
 	this.idLock.Lock()
 	timestamp := time.Now().UnixNano()
+	//时间回拨直接return
 	if timestamp < this.lastTimestamp {
 		return -1, errors.New(fmt.Sprintf("Clock moved backwards.  Refusing to generate id for %d milliseconds", this.lastTimestamp-timestamp))
 	}
-
+	//同一毫秒，生成对应的sn
 	if timestamp == this.lastTimestamp {
-		this.sequence = (this.sequence + 1) & this.sequenceMask
-		if this.sequence == 0 {
+		this.sequence +=1
+		if this.sequence > 4096 {
+			//如果是0，代表超出了
 			timestamp = this.tilNextMillis()
 			this.sequence = 0
 		}
 	} else {
 		this.sequence = 0
 	}
-
+	//更新最后时间
 	this.lastTimestamp = timestamp
 
 	this.idLock.Unlock()
@@ -124,13 +125,13 @@ func (this *IdWorker) NextId() (int64, error) {
 	if id < 0 {
 		id = -id
 	}
-
 	return id, nil
 }
 
 func (this *IdWorker) tilNextMillis() int64 {
-	timestamp := time.Now().UnixNano()
-	if timestamp <= this.lastTimestamp {
+	time.Sleep(time.Millisecond)//等待下一秒刷新
+	timestamp := time.Now().UnixNano()//当前时间
+	if timestamp <= this.lastTimestamp {//如果内存时间大于当前时间，将当前时间刷新为正确时间
 		timestamp = time.Now().UnixNano() / int64(time.Millisecond)
 	}
 	return timestamp
