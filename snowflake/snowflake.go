@@ -89,16 +89,10 @@ func (sf *SnowFlake) NextId() (int64, error) {
 	// 将机器id左移放到5 bit那儿；左移12
 	// 将序号放最后12 bit
 	// 最后拼接起来成一个64 bit的二进制数字，转换成10进制就是个long型
-	id := ((sf.lastTimestamp - sf.startTime) << 22) |
-		(sf.dataCenterId << 17) |
-		(sf.workerId << 12) |
+	id := ((timestamp - sf.startTime) << sf.timestampLeftShift) |
+		(sf.dataCenterId << sf.dataCenterIdLeftShift) |
+		(sf.workerId << sf.workerIdLeftShift) |
 		sf.sequence
-	//log.Fatalln(sf.timestampLeftShift,sf.dataCenterIdLeftShift,sf.workerIdLeftShift)
-	//id := ((timestamp - sf.startTime) << sf.timestampLeftShift) |
-	//	(sf.dataCenterId << sf.dataCenterIdLeftShift) |
-	//	(sf.workerId << sf.workerIdLeftShift) |
-	//	sf.sequence
-
 	if id < 0 {
 		id = -id
 	}
